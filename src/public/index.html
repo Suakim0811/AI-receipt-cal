@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Calculate</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4efe6;
+        --panel: rgba(255, 252, 247, 0.9);
+        --panel-strong: #fffdf8;
+        --ink: #1c1a17;
+        --muted: #6e6558;
+        --accent: #0f766e;
+        --accent-strong: #115e59;
+        --line: rgba(28, 26, 23, 0.1);
+        --shadow: 0 24px 70px rgba(45, 35, 20, 0.16);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(15, 118, 110, 0.2), transparent 30%),
+          radial-gradient(circle at top right, rgba(244, 114, 182, 0.12), transparent 24%),
+          linear-gradient(180deg, #f8f2e8 0%, #efe6d7 100%);
+        font-family: "Baskerville", "Georgia", serif;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image: linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px);
+        background-size: 42px 42px;
+        mask-image: linear-gradient(180deg, rgba(0,0,0,0.28), transparent 70%);
+        opacity: 0.18;
+      }
+
+      .shell {
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 32px 0 48px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: 1.15fr 0.85fr;
+        align-items: end;
+        margin-bottom: 22px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        width: fit-content;
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255,255,255,0.45);
+        color: var(--accent-strong);
+        font: 600 13px/1.1 "Trebuchet MS", sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(40px, 6vw, 76px);
+        line-height: 0.95;
+        letter-spacing: -0.05em;
+      }
+
+      .lead {
+        margin: 0;
+        max-width: 58ch;
+        color: var(--muted);
+        font: 400 17px/1.7 "Trebuchet MS", sans-serif;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid rgba(28, 26, 23, 0.08);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .card-inner {
+        padding: 20px;
+      }
+
+      .section-title {
+        margin: 0 0 12px;
+        font: 700 18px/1.2 "Trebuchet MS", sans-serif;
+      }
+
+      .field {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      label {
+        font: 700 13px/1.2 "Trebuchet MS", sans-serif;
+        color: var(--muted);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      input[type="text"],
+      input[type="file"],
+      textarea {
+        width: 100%;
+        border: 1px solid rgba(28, 26, 23, 0.12);
+        border-radius: 14px;
+        background: rgba(255,255,255,0.92);
+        color: var(--ink);
+        padding: 14px 16px;
+        font: 400 15px/1.5 "Trebuchet MS", sans-serif;
+      }
+
+      textarea {
+        min-height: 96px;
+        resize: vertical;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 16px;
+        font: 700 14px/1 "Trebuchet MS", sans-serif;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      .primary {
+        background: linear-gradient(135deg, var(--accent), #22c55e);
+        color: white;
+        box-shadow: 0 12px 24px rgba(15, 118, 110, 0.24);
+      }
+
+      .secondary {
+        background: rgba(17, 94, 89, 0.08);
+        color: var(--accent-strong);
+      }
+
+      .ghost {
+        background: rgba(28, 26, 23, 0.06);
+        color: var(--ink);
+      }
+
+      .status {
+        margin-top: 12px;
+        color: var(--muted);
+        font: 500 14px/1.6 "Trebuchet MS", sans-serif;
+      }
+
+      .upload-preview {
+        min-height: 220px;
+        border: 1px dashed rgba(28, 26, 23, 0.16);
+        border-radius: 20px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.46));
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+
+      .upload-preview img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .placeholder {
+        padding: 24px;
+        text-align: center;
+        color: var(--muted);
+        font: 500 15px/1.7 "Trebuchet MS", sans-serif;
+      }
+
+      .results {
+        margin-top: 18px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .result-card {
+        padding: 16px;
+        background: var(--panel-strong);
+        border: 1px solid rgba(28, 26, 23, 0.08);
+        border-radius: 18px;
+      }
+
+      .result-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: start;
+        margin-bottom: 12px;
+      }
+
+      .result-title {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .price {
+        color: var(--accent-strong);
+        font: 700 16px/1.2 "Trebuchet MS", sans-serif;
+      }
+
+      .people {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .person-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border: 1px solid rgba(28, 26, 23, 0.12);
+        border-radius: 999px;
+        background: rgba(255,255,255,0.8);
+        font: 600 14px/1 "Trebuchet MS", sans-serif;
+      }
+
+      .summary {
+        margin-top: 18px;
+        padding: 18px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(15, 118, 110, 0.1), rgba(34, 197, 94, 0.12));
+        border: 1px solid rgba(15, 118, 110, 0.16);
+      }
+
+      .summary pre {
+        margin: 0;
+        white-space: pre-wrap;
+        font: 600 15px/1.8 "Trebuchet MS", sans-serif;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+      }
+
+      @media (max-width: 900px) {
+        .hero,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">receipt splitter</div>
+          <h1>AI Calculate</h1>
+          <p class="lead">영수증 이미지를 올리면 Worker가 OCR과 LLM을 호출해서 품목을 추출하고, 브라우저에서 참여자별 더치페이를 계산합니다.</p>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <div class="card-inner">
+            <h2 class="section-title">1. 영수증 업로드</h2>
+            <div class="field">
+              <label for="receipt">영수증 이미지</label>
+              <input id="receipt" type="file" accept="image/*" />
+            </div>
+            <div class="upload-preview" id="preview">
+              <div class="placeholder">이미지를 선택하면 미리보기가 표시됩니다.</div>
+            </div>
+            <div class="field" style="margin-top: 16px;">
+              <label for="people">참여자</label>
+              <input id="people" type="text" placeholder="예) 철수,영희,민수" />
+            </div>
+            <div class="actions">
+              <button class="primary" id="analyze">체크리스트 생성</button>
+              <button class="secondary" id="reset">초기화</button>
+            </div>
+            <div class="status" id="status">대기 중</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-inner">
+            <h2 class="section-title">2. 결과</h2>
+            <div id="results" class="results"></div>
+            <div id="summary" class="summary" hidden>
+              <pre id="summaryText"></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <template id="item-template">
+      <article class="result-card">
+        <div class="result-head">
+          <div>
+            <h3 class="result-title"></h3>
+          </div>
+          <div class="price"></div>
+        </div>
+        <div class="actions" style="margin-top: 0; margin-bottom: 12px;">
+          <button class="ghost select-all" type="button">전체선택</button>
+          <button class="ghost select-none" type="button">전체해제</button>
+        </div>
+        <div class="people"></div>
+      </article>
+    </template>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
